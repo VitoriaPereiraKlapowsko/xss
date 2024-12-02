@@ -3,6 +3,7 @@ const fb = require('fibonacci');
 
 
 import * as ApiController from '../controllers/apiController';
+import { safeEndpoint } from '../controllers/safeController';
 
 
 const router = Router();
@@ -37,12 +38,7 @@ router.get('/mostrarNotificacao', ApiController.mostrarNotificacao);
 // Rota para cadastrar uma nova notificacao
 router.patch('/atualizarNotificacao', ApiController.atualizarNotificacao);
 
-
-
-
-
-
-
-
+// Rota segura utilizando o controlador safeEndpoint
+router.get('/safe', safeEndpoint);
 
 export default router;

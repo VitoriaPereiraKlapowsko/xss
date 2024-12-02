@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Usuario } from '../models/Usuario';
 import { Notificacao } from '../models/Notificacao';
+import jwt from 'jsonwebtoken';
 
 export const ping = (req: Request, res: Response) => {
     res.json({ pong: true });
@@ -26,24 +27,28 @@ export const cadastrarUsuario = async (req: Request, res: Response) => {
 
     return res.status(400).json({ error: 'E-mail e/ou senha não enviados.' });
 }
-
 export const fazerLogin = async (req: Request, res: Response) => {
+    // Verifiquei se as credenciais foram fornecidas no corpo da requisição
     if (req.body.email && req.body.senha) {
-        let email: string = req.body.email;
-        let senha: string = req.body.senha;
+        const { email, senha } = req.body; // Desestruturação das credenciais
 
-        let usuario = await Usuario.findOne({
-            where: { email, senha }
-        });
+        // Buscando o usuário no banco de dados usando o email e a senha fornecidos
+        const usuario = await Usuario.findOne({ where: { email, senha } });
 
         if (usuario) {
-            res.json({ status: true });
-            return;
+            // Gera um token JWT com as informações do usuário
+            const token = jwt.sign(
+                { id: usuario.id, email: usuario.email }, 
+                process.env.JWT_SECRET!, // A chave secreta para assinar o token
+                { expiresIn: '1h' } // Tempo de expiração do token
+            );
+            // Retorna o token ao cliente como resposta
+            return res.json({ status: true, token });
         }
     }
+    res.status(401).json({ status: false, error: 'Credenciais inválidas' });
+};
 
-    res.json({ status: false });
-}
 
 export const listarEmails = async (req: Request, res: Response) => {
     let usuarios = await Usuario.findAll();
